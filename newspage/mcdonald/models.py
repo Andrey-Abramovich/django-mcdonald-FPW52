@@ -1,4 +1,6 @@
 from django.db import models
+from datetime import datetime
+
 
 class Order(models.Model):  # наследуемся от класса Model
     time_in = models.DateTimeField(auto_now_add=True)
@@ -9,6 +11,17 @@ class Order(models.Model):  # наследуемся от класса Model
     staff = models.ForeignKey('Staff', on_delete=models.CASCADE)
 
     products = models.ManyToManyField('Product', through='ProductOrder')
+
+    def finish_order(self):
+        self.time_out = datetime.now()
+        self.complete = True
+        self.save()
+
+    def get_duration(self):
+        if self.complete:  # если завершён, возвращаем разность объектов
+            return (self.time_out - self.time_in).total_seconds() // 60
+        else:  # если ещё нет, то сколько длится выполнение
+            return (datetime.now() - self.time_in).total_seconds() // 60
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
@@ -38,4 +51,20 @@ class Staff(models.Model):
 class ProductOrder(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
-    amount = models.IntegerField(default=1)
+    _amount = models.IntegerField(default=1, db_column='amount')
+
+    def product_sum(self):
+        product_price = self.product.price
+        return product_price * self.amount
+
+    def get_last_name(self):
+        return self.full_name.split()[0]
+
+    @property
+    def amount(self):
+        return self._amount
+
+    @amount.setter
+    def amount(self, value):
+        self._amount = int(value) if value >= 0 else 0
+        self.save()
