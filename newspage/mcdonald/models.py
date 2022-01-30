@@ -19,9 +19,9 @@ class Order(models.Model):  # наследуемся от класса Model
 
     def get_duration(self):
         if self.complete:  # если завершён, возвращаем разность объектов
-            return (self.time_out - self.time_in).total_seconds() // 60
+            return (self.time_out - self.time_in).total_seconds()
         else:  # если ещё нет, то сколько длится выполнение
-            return (datetime.now() - self.time_in).total_seconds() // 60
+            return (datetime.now() - self.time_in).total_seconds()
 
 class Product(models.Model):
     name = models.CharField(max_length=255)
